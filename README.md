@@ -2,8 +2,8 @@
 Powershell module for Datto API interaction
 
 #### Installation
-    Install-Module DattoAPI
-    Import-Module DattoAPI
+    Install-Module Datto-API
+    Import-Module Datto-API
 
 #### Usage
     $Token = New-DattoAPIToken -APIKey "1234567" -APISecretKey "asdfasdfasdf"
