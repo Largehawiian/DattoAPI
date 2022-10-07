@@ -15,26 +15,32 @@
 function Get-DattoDevices {
 	param (
 		[parameter(Mandatory = $true)][string]$APIToken,
-		[parameter(Mandatory = $true, ValueFromPipelineByPropertyName)][string]$SiteUID
+		[parameter(Mandatory = $true, ValueFromPipelineByPropertyName)][string]$SiteUID,
+		[String]$Platform
 	)
 	process {
 		$Results = [System.Collections.Generic.List[array]]::new()
 		$DeviceURI = [System.UriBuilder]::new()
-		$DeviceURI.Host = ("concord-api.centrastage.net/api/v2/site/{0}/devices" -f $SiteUID)
-		$DeviceURI.Scheme = "https"
-		$DeviceHeaders = @{
-			"Authorization" = "Bearer $AEMToken"
+		if ($Platform.Length -gt 0) {
+			{
+				$DeviceURI.Host = ("{1}-api.centrastage.net/api/v2/site/{0}/devices" -f $SiteUID, $Platform)
+			}
+			else { $DeviceURI.Host = ("concord-api.centrastage.net/api/v2/site/{0}/devices" -f $SiteUID)
+			}
+			$DeviceURI.Scheme = "https"
+			$DeviceHeaders = @{
+				"Authorization" = "Bearer $AEMToken"
+			}
+			$o = Invoke-RestMethod -Method GET -ContentType "application/json" -Uri $DeviceURI.Uri.AbsoluteUri -Headers $Headers
+			$Results.Add($o.Devices)
+			if ($o.pageDetails.nextPageUrl.Length -gt 0 ) {
+				do {
+					$x = Invoke-RestMethod -Method GET -ContentType "application/json" -Uri $DeviceObj.pageDetails.nextPageUrl -Headers $DeviceHeaders
+					$Results.Add($x.Devices)
+				} while ($x.pageDetails.nextPageUrl.Length -gt 0)
+			}
+			$Return = @()
+			$Results | ForEach-Object { $Return += $_ }
+			return [DattoDevice]::ToReport($Return)
 		}
-		$o = Invoke-RestMethod -Method GET -ContentType "application/json" -Uri $DeviceURI.Uri.AbsoluteUri -Headers $Headers
-		$Results.Add($o.Devices)
-		if ($o.pageDetails.nextPageUrl.Length -gt 0 ) {
-			do {
-				$x = Invoke-RestMethod -Method GET -ContentType "application/json" -Uri $DeviceObj.pageDetails.nextPageUrl -Headers $DeviceHeaders
-				$Results.Add($x.Devices)
-			} while ($x.pageDetails.nextPageUrl.Length -gt 0)
-		}
-		$Return = @()
-		$Results | ForEach-Object { $Return += $_ }
-		return [DattoDevice]::ToReport($Return)
 	}
-}

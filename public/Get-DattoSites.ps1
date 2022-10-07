@@ -12,11 +12,18 @@
 #>
 function Get-DattoSites {
 	param (
-		[parameter(Mandatory=$true)][string]$APIToken
+		[parameter(Mandatory=$true)][string]$APIToken,
+		[String]$Platform
 	)
 	$Results = [System.Collections.Generic.List[array]]::new()
 	$URI = [System.UriBuilder]::new()
-	$URI.Host = ("concord-api.centrastage.net/api/v2/account/sites")
+	if ($Platform.Length -gt 0) {
+		$URI.Host = ("{0}-api.centrastage.net/api/v2/account/sites" -f $Platform)
+	}
+	else {
+		$URI.Host = ("concord-api.centrastage.net/api/v2/account/sites")
+	}
+	
 	$URI.Scheme = "https"
 	$DeviceHeaders = @{
 		"Authorization" = "Bearer $AEMToken"
